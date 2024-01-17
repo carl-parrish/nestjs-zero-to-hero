@@ -2,7 +2,7 @@
   "name": "nestjs-zero-to-hero",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Carl Parrish <cparrish@carlparrish.com",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
