@@ -29,4 +29,10 @@ export class TasksService {
     this.tasks.push(task);
     return task;
   }
+
+  public updateTaskStatusById(id: string, status: TaskStatus): Task {
+    const task = this.getTaskById(id);
+    task.status = status;
+    return task;
+  }
 }
