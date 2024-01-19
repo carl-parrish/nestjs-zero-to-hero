@@ -32,6 +32,14 @@
 $ pnpm install
 ```
 
+# Installing Prisma
+
+```bash
+$ pnpm add prisma --save-dev
+$ pnpm exec prisma init
+$ pnpm exec prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migration.sql
+```
+
 ## Running the app
 
 ```bash
@@ -58,10 +66,4 @@ $ pnpm run test:e2e
 $ pnpm run test:cov
 ```
 
-# Installing prisma
 
-```bash
-$ pnpm add prisma --save-dev
-$ pnpm exec prisma init
-$ pnpm exec prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > migration.sql
-```
