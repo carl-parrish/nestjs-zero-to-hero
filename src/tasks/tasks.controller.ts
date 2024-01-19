@@ -6,45 +6,49 @@ import {
   Param,
   Patch,
   Post,
-  Query,
 } from '@nestjs/common';
 import { TasksService } from './tasks.service';
-import { Task, TaskStatus } from './task.model';
+import { TaskStatus } from './task.model';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { GetTaskFilterDto } from './dto/get-task-filter.dto';
+import { Task as TaskModel } from '@prisma/client';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private tasksService: TasksService) {}
 
   @Get()
-  getTasks(@Query() filterDto: GetTaskFilterDto): Task[] {
-    if (Object.keys(filterDto).length) {
-      return this.tasksService.getTasksWithFilter(filterDto);
-    } else {
-      return this.tasksService.getAllTasks();
-    }
+  getTasks(): Promise<TaskModel[]> {
+    return this.tasksService.getAllTasks();
   }
   @Get('/:id')
-  getTaskById(@Param('id') id: string): Task {
-    return this.tasksService.getTaskById(id);
+  async getTaskById(@Param('id') id: string): Promise<TaskModel> {
+    return this.tasksService.getTaskById({ id: id });
   }
 
   @Post()
-  createTask(@Body() createTaskDto: CreateTaskDto): Task {
-    return this.tasksService.createTask(createTaskDto);
+  createTask(
+    @Body()
+    taskData: CreateTaskDto,
+  ): Promise<TaskModel> {
+    return this.tasksService.createTask(taskData);
   }
 
   @Patch('/:id/status')
-  updateTaskStatusById(
+  UpdateTaskStatusById(
     @Param('id') id: string,
     @Body('status') status: string,
-  ): Task {
-    return this.tasksService.updateTaskStatusById(id, TaskStatus[status]);
+  ): Promise<TaskModel> {
+    return this.tasksService.updateTaskStatusById(
+      { id: id },
+      TaskStatus[status] as
+        | TaskStatus.OPEN
+        | TaskStatus.DONE
+        | TaskStatus.IN_PROGRESS,
+    );
   }
 
   @Delete('/:id')
-  deleteTaskById(@Param('id') id: string): void {
-    return this.tasksService.deleteTaskById(id);
+  deleteTaskById(@Param('id') id: string): Promise<TaskModel> {
+    return this.tasksService.deleteTaskById({ id: id });
   }
 }

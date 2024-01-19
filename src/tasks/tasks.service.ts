@@ -1,17 +1,62 @@
 import { Injectable } from '@nestjs/common';
-import { Task, TaskStatus } from './task.model';
-import { CreateTaskDto } from './dto/create-task.dto';
-import { GetTaskFilterDto } from './dto/get-task-filter.dto';
+import { TaskStatus } from './task.model';
+import { PrismaService } from 'src/prisma.service';
+import { Task as TaskModel, Prisma } from '@prisma/client';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  public getAllTasks(): Task[] {
-    return this.tasks;
+  //Create Task
+  public async createTask(data: Prisma.TaskCreateInput): Promise<TaskModel> {
+    return this.prisma.task.create({
+      data,
+    });
   }
 
-  public getTasksWithFilter(filterDto: GetTaskFilterDto): Task[] {
+  //Retrieve Task
+  public async getTaskById(
+    id: Prisma.TaskWhereUniqueInput,
+  ): Promise<TaskModel | null> {
+    return this.prisma.task.findUnique({
+      where: id,
+    });
+  }
+
+  public async getAllTasks(): Promise<TaskModel[]> {
+    return this.prisma.task.findMany();
+  }
+
+  public async updateTask(params: {
+    where: Prisma.TaskWhereUniqueInput;
+    data: Prisma.TaskUpdateInput;
+  }): Promise<TaskModel> {
+    const { where, data } = params;
+    return this.prisma.task.update({
+      data,
+      where,
+    });
+  }
+
+  public async updateTaskStatusById(
+    id: Prisma.TaskWhereUniqueInput,
+    status: TaskStatus,
+  ): Promise<TaskModel> {
+    const task = await this.getTaskById(id);
+    task.status = status;
+    return task;
+  }
+
+  // Delete Task
+  public async deleteTaskById(
+    where: Prisma.TaskWhereUniqueInput,
+  ): Promise<TaskModel> {
+    return this.prisma.task.delete({
+      where,
+    });
+  }
+
+  /* public getTasksWithFilter(filterDto: GetTaskFilterDto): TaskModel[] {
     const { status, search } = filterDto;
     let tasks = this.getAllTasks();
     if (status) {
@@ -24,35 +69,5 @@ export class TasksService {
       );
     }
     return tasks;
-  }
-
-  public getTaskById(id: string): Task {
-    const found = this.tasks.find((task) => task.id === id);
-    if (!found) {
-      throw new Error('Task not found');
-    }
-    return found;
-  }
-
-  public deleteTaskById(id: string): void {
-    this.tasks = this.tasks.filter((task) => task.id !== id);
-  }
-
-  public createTask(createTaskDto: CreateTaskDto): Task {
-    const { title, description } = createTaskDto;
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      status: TaskStatus.OPEN,
-    };
-    this.tasks.push(task);
-    return task;
-  }
-
-  public updateTaskStatusById(id: string, status: TaskStatus): Task {
-    const task = this.getTaskById(id);
-    task.status = status;
-    return task;
-  }
+  } */
 }
