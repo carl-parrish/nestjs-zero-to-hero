@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { TaskStatus } from './task.model';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TaskStatus } from './task-status.enum';
 import { PrismaService } from 'src/prisma.service';
 import { Task as TaskModel, Prisma } from '@prisma/client';
+import { error } from 'console';
 
 @Injectable()
 export class TasksService {
@@ -18,9 +19,21 @@ export class TasksService {
   public async getTaskById(
     id: Prisma.TaskWhereUniqueInput,
   ): Promise<TaskModel | null> {
-    return this.prisma.task.findUnique({
-      where: id,
-    });
+    try {
+      const find = await this.prisma.task.findUnique({where:id});
+      if (!find) {
+        throw new NotFoundException(`Task with ID "${id}" not found`);
+      }
+      return find;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2001') {
+          throw new NotFoundException(`Task with ID "${id}" not found`);
+          console.log('Task not found');
+        }
+      }
+    }
+    throw error;
   }
 
   public async getAllTasks(): Promise<TaskModel[]> {
