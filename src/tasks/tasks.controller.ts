@@ -40,10 +40,7 @@ export class TasksController {
   ): Promise<TaskModel> {
     return this.tasksService.updateTaskStatusById(
       { id: id },
-      TaskStatus[status] as
-        | TaskStatus.OPEN
-        | TaskStatus.DONE
-        | TaskStatus.IN_PROGRESS,
+      TaskStatus[status],
     );
   }
 

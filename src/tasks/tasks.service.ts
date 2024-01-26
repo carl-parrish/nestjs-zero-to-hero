@@ -52,12 +52,13 @@ export class TasksService {
   }
 
   public async updateTaskStatusById(
-    id: Prisma.TaskWhereUniqueInput,
-    status: TaskStatus,
+    task_id: Prisma.TaskWhereUniqueInput,
+    task_status: TaskStatus,
   ): Promise<TaskModel> {
-    const task = await this.getTaskById(id);
-    task.status = status;
-    return task;
+    return await this.prisma.task.update({
+      where: { id: task_id.id },
+      data: { status: task_status },
+    });
   }
 
   // Delete Task
