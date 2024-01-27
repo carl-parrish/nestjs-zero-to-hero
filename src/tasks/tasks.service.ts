@@ -20,7 +20,7 @@ export class TasksService {
     id: Prisma.TaskWhereUniqueInput,
   ): Promise<TaskModel | null> {
     try {
-      const find = await this.prisma.task.findUnique({where:id});
+      const find = await this.prisma.task.findUnique({ where: id });
       if (!find) {
         throw new NotFoundException(`Task with ID "${id}" not found`);
       }
@@ -38,6 +38,23 @@ export class TasksService {
 
   public async getAllTasks(): Promise<TaskModel[]> {
     return this.prisma.task.findMany();
+  }
+
+  public async getFilteredTasks(params: {
+    skip?: number;
+    take?: number;
+    cursor?: Prisma.TaskWhereUniqueInput;
+    where?: Prisma.TaskWhereInput;
+    orderBy?: Prisma.TaskOrderByWithRelationInput;
+  }): Promise<TaskModel[]> {
+    const { skip, take, cursor, where, orderBy } = params;
+    return this.prisma.task.findMany({
+      skip,
+      take,
+      cursor,
+      where,
+      orderBy,
+    });
   }
 
   public async updateTask(params: {
