@@ -1,38 +1,104 @@
-import { Injectable } from '@nestjs/common';
-import { Task, TaskStatus } from './task.model';
-import { CreateTaskDto } from './dto/create-task.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { TaskStatus } from './task-status.enum';
+import { PrismaService } from 'src/prisma.service';
+import { Task as TaskModel, Prisma } from '@prisma/client';
+import { error } from 'console';
 
 @Injectable()
 export class TasksService {
-  private tasks: Task[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  public getAllTasks(): Task[] {
-    return this.tasks;
+  //Create Task
+  public async createTask(data: Prisma.TaskCreateInput): Promise<TaskModel> {
+    return this.prisma.task.create({
+      data,
+    });
   }
 
-  public getTaskById(id: string): Task {
-    return this.tasks.find((task) => task.id === id);
+  //Retrieve Task
+  public async getTaskById(
+    id: Prisma.TaskWhereUniqueInput,
+  ): Promise<TaskModel | null> {
+    try {
+      const find = await this.prisma.task.findUnique({ where: id });
+      if (!find) {
+        throw new NotFoundException(`Task with ID "${id}" not found`);
+      }
+      return find;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2001') {
+          throw new NotFoundException(`Task with ID "${id}" not found`);
+          console.log('Task not found');
+        }
+      }
+    }
+    throw error;
   }
 
-  public deleteTaskById(id: string): void {
-    this.tasks = this.tasks.filter((task) => task.id !== id);
+  public async getAllTasks(): Promise<TaskModel[]> {
+    return this.prisma.task.findMany();
   }
 
-  public createTask(createTaskDto: CreateTaskDto): Task {
-    const { title, description } = createTaskDto;
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      status: TaskStatus.OPEN,
-    };
-    this.tasks.push(task);
-    return task;
+  public async getFilteredTasks(params: {
+    skip?: number;
+    take?: number;
+    cursor?: Prisma.TaskWhereUniqueInput;
+    where?: Prisma.TaskWhereInput;
+    orderBy?: Prisma.TaskOrderByWithRelationInput;
+  }): Promise<TaskModel[]> {
+    const { skip, take, cursor, where, orderBy } = params;
+    return this.prisma.task.findMany({
+      skip,
+      take,
+      cursor,
+      where,
+      orderBy,
+    });
   }
 
-  public updateTaskStatusById(id: string, status: TaskStatus): Task {
-    const task = this.getTaskById(id);
-    task.status = status;
-    return task;
+  public async updateTask(params: {
+    where: Prisma.TaskWhereUniqueInput;
+    data: Prisma.TaskUpdateInput;
+  }): Promise<TaskModel> {
+    const { where, data } = params;
+    return this.prisma.task.update({
+      data,
+      where,
+    });
   }
+
+  public async updateTaskStatusById(
+    task_id: Prisma.TaskWhereUniqueInput,
+    task_status: TaskStatus,
+  ): Promise<TaskModel> {
+    return await this.prisma.task.update({
+      where: { id: task_id.id },
+      data: { status: task_status },
+    });
+  }
+
+  // Delete Task
+  public async deleteTaskById(
+    where: Prisma.TaskWhereUniqueInput,
+  ): Promise<TaskModel> {
+    return this.prisma.task.delete({
+      where,
+    });
+  }
+
+  /* public getTasksWithFilter(filterDto: GetTaskFilterDto): TaskModel[] {
+    const { status, search } = filterDto;
+    let tasks = this.getAllTasks();
+    if (status) {
+      tasks = tasks.filter((task) => task.status === status);
+    }
+    if (search) {
+      tasks = tasks.filter(
+        (task) =>
+          task.title.includes(search) || task.description.includes(search),
+      );
+    }
+    return tasks;
+  } */
 }
