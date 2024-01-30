@@ -11,7 +11,6 @@ import { TasksService } from './tasks.service';
 import { TaskStatus } from './task-status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Task as TaskModel } from '@prisma/client';
-import { GetTaskFilterDto } from './dto/get-task-filter.dto';
 
 @Controller('tasks')
 export class TasksController {
@@ -24,16 +23,16 @@ export class TasksController {
 
   @Get('filtered-tasks/:searchString')
   async getFilteredTasks(
-    @Param('searchString') searchString: string,
+    @Param('searchString'.toLowerCase()) searchString: string,
   ): Promise<TaskModel[]> {
     return this.tasksService.getFilteredTasks({
       where: {
         OR: [
           {
-            title: { contains: searchString },
+            title: { contains: searchString.toLowerCase() },
           },
           {
-            description: { contains: searchString },
+            description: { contains: searchString.toLowerCase() },
           },
         ],
       },
